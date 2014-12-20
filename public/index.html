@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en" ng-app = "chatApp">
+<head>
+  <meta charset="UTF-8">
+  <title>Football</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/main.js"></script>
+  <style>
+  body {
+    font-family:"Helvetica Neue";
+    color: #686765;
+}
+.name {
+    float:right;
+    color:#27aae1;
+}
+.axis {
+    fill: none;
+    stroke: #AAA;
+    stroke-width: 1px;
+}
+text {
+    stroke: none;
+    fill: #666666;
+    font-size: .6em;
+    font-family:"Helvetica Neue"
+}
+.label {
+    fill: #414241;
+}
+.node {
+    cursor:pointer;
+}
+.dot {
+    opacity: .7;
+    cursor: pointer;
+}
+</style>
+</head>
+<body>
+<h3>Visual Analytics Course - Oxford University</h3>
+
+<p>Scatter plot - loading data <span class="name">Eamonn Maguire</span>
+
+</p>
+<div id="scatter-load"></div>
+</body>
+</html>
