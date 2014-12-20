@@ -18,23 +18,34 @@ var stream = fs.createReadStream(__dirname + '/data/pbp-2014.csv');
 
 // Chatroom
 //my own stuff
-pbpData = []
+var pbpData = []
+var i = 0;
+
 var csvStream = csv.fromStream(stream,{headers:true})
     .on("data", function(data){
-      pbpData.push(data)
-      //messageData.push(data);
-      //setUpMispelledWords(data);
-      //setUpFrequentWords(data);
-      //setUpFrequentWordsNames(data);
+      if(data.OffenseTeam=="SEA"){
+        var gameID = data.GameId
+        if(pbpData[gameID]==undefined)
+        {
+          pbpData[gameID] = [data];
+        }
+        else
+        {
+          pbpData[gameID].push(data)
+        }
+      }
     })
     .on("end", function(){
-      console.log(pbpData)
-      //sortMessages();
-      //sortFrequentWords();
-        //createSubTitle(messageData)
-        //findMostFrequentName();
-       // mostFrequentAtTime();
-        //sentimentAtTimes();
-        //console.log(mostFrequentWordsName)
-
     });
+
+//Temp communication to front end for testing. 
+app.get('/data', function(req, res){
+    var asJSON = JSON.stringify(pbpData);
+     res.send(pbpData)
+})
+
+//Data structure for NFL data
+function nflData(){
+  this.gameID
+
+}
