@@ -1,3 +1,15 @@
+/**
+  javascript's single threaded asynchronous BS is super annoying. 
+  I do not understand why there is no multi threaded support instead of
+  pseudo multi threaded crap known as asynchrony. 
+
+  Path: getKeys() -> querySeahawksPlays() -> 
+
+  getKeys(): Sets up keyArray. Puts in Game IDs into key array. 
+  querySeahawksPlays(): Counts the amount of runs and passes called by Seahawks. 
+**/
+
+
 // Setup basic express server
 var express = require('express');
 var app = express();
@@ -12,30 +24,74 @@ server.listen(port, function () {
   console.log('Server listening at port %d', port);
 });
 var pbpData = []
-var keyArray
+var keyArray;
 var i = 0;
+//readCSV();
 getKeys();
 
+
+//Function that queries Seahawks Penalty Plays. 
 function querySeahawksPlays(db){
-  var penaltyData = [];
+  var downPlay = new Array(4);
+  done  = false;
+  for(i = 1;i<=4;i++)
+  {
+    downPlay[i] = new playTypeTuple();
+  }
+  //key represents each game. 
+  //iterating for each game. 
+  var asyncCounter = 0;
+  var runCountr = 0;
   for(key in keyArray)
   {
+    console.log(keyArray[key])
       var collection = db.collection(keyArray[key]);
-      console.log(key + "  " + keyArray[key])
-      collection.find({"IsPenalty" : "1" ,"PenaltyTeam" : "SEA"}).toArray(function(err,docs){
-      console.log(docs[0].DefenseTeam + " " + docs.length)
+      collection.find().toArray(function(err,docs){
+        runCountr += docs.length
+        for(playKey in docs){
 
-        penaltyData.push(docs);
-        if(key==keyArray.length-1){
-            app.get('/data', function(req, res){
-            var asJSON = JSON.stringify(penaltyData);
+          var down = docs[playKey].Down
+          if(down!=0){
+
+              if(docs[playKey].PlayType=="PASS")
+              {
+                  downPlay[down].passCount++;
+              }
+              else if(docs[playKey].PlayType=="RUSH")
+              {
+                   downPlay[down].runCount++;
+              }
+              else if(docs[playKey].PlayType=="SCRAMBLE")
+              {
+                 downPlay[down].runCount++;
+              }
+              else if(docs[playKey].PlayType=="QB KNEEL")
+              {
+                 downPlay[down].runCount++;
+              }
+
+          }
+        }
+        asyncCounter++
+        //console.log(asyncCounter)
+        if(asyncCounter==keyArray.length){
+
+            app.get('/playCount', function(req, res){
+            var asJSON = JSON.stringify(downPlay);
             res.send(asJSON)
-        })
+            })
+        console.log(runCountr)
 
+            console.log("Reached End")
+            console.log(downPlay)
         }
       })
+      //Iterate through each down and keep track of play selection. 
   }
-
+}
+function playTypeTuple(){
+  this.runCount = 0;
+  this.passCount = 0;
 }
 //helper functions
 function connecToMongo(){
@@ -48,7 +104,6 @@ function connecToMongo(){
           });
     }
   });
-  db.close();
 
 }
 // Chatroom
@@ -99,8 +154,8 @@ function getKeys(){
       }
       items.splice(badKey,1)
       keyArray = items.slice(0);
-      querySeahawksPlays(db)
-      });
+      querySeahawksPlays(db);
         
     })
+  })
 }

@@ -2,7 +2,7 @@
 
 $(document).ready(function(){
 $.ajax({
-  url: "/data",
+  url: "/playCount",
   type: "get",
   dataType: "json",
   async: false,
