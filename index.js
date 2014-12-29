@@ -29,7 +29,20 @@ var i = 0;
 //readCSV();
 getKeys();
 
+//Function that gets success rate of third down pass/run plays
+function querySeahawksPlaysThirdDown(db){
+    for(key in keyArray)
+  {
+    console.log(keyArray[key])
+      var collection = db.collection(keyArray[key]);
+      collection.find().toArray(function(err,docs){
+        
+      })
+      //Iterate through each down and keep track of play selection. 
+  }
 
+
+}
 //Function that queries Seahawks Penalty Plays. 
 function querySeahawksPlays(db){
   var downPlay = new Array(4);
