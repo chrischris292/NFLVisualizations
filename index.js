@@ -25,22 +25,89 @@ server.listen(port, function () {
 });
 var pbpData = []
 var keyArray;
+var thirdDownCache = [];
 var i = 0;
 //readCSV();
 getKeys();
 
 //Function that gets success rate of third down pass/run plays
 function querySeahawksPlaysThirdDown(db){
-    for(key in keyArray)
+  console.log("hi")
+  var rushCount = 0;
+  var passCount = 0;
+  var convertCountRush = 0;
+  var convertCountPass = 0;
+  var sackCount = 0;
+  var playCount = 0;
+var gameCount = 0;
+  //for each game.
+  for(game in keyArray)
   {
-    console.log(keyArray[key])
-      var collection = db.collection(keyArray[key]);
-      collection.find().toArray(function(err,docs){
-        
+      var collection = db.collection(keyArray[game]);
+      collection.find({"Down" : "3"}).toArray(function(err,plays){
+        gameCount++;
+        playCount += plays.length;
+        for(key in plays){
+
+            //Logic for Rush
+            if(plays[key].IsRush=="1"){
+                  if(plays[key].ToGo<=plays[key].Yards){
+                    convertCountRush++;
+                  }
+                  rushCount++;
+            }
+            //logic for Pass
+            else{
+              if(plays[key].IsPass=="1"){
+                  //if yards gained is greater than to go. successful conversion
+                  if(plays[key].ToGo<=plays[key].Yards){
+                    convertCountPass++;
+                  }
+                  passCount++;
+              }
+              //ERROR CHECKING: 
+              //Case for penalties/sacks/fumbles.. 
+              if(plays[key].IsPass=="0"){
+                  //could do recursive check here for if multiple plays after penalty...add later. 
+                  //Penalty check next play for count. 
+                  if(plays[key].IsNoPlay=="1"){
+                      //Check first down?
+                      if(plays[key+1]!=undefined) //means the game was alreadyd over. 
+                      {
+                        if(plays[key+1].ToGo<=plays[key+1].Yards){
+                          convertCountRush++;
+                        }
+                      }
+                  }
+                  else if((plays[key].IsSack=="1")||(plays[key].IsFumble=="1")){
+                      //sackCount++;
+                  }
+                  else{
+                      //this is where kneel downs happen....but we dont care abotu that. 
+                  }
+              }
+
+
+            }
+
+        }
+        //due to asynchronous nature of code must check for end case down here...
+        console.log(plays[0].GameId)
+       // console.log(keyArray[keyArray.length-1])
+        if(gameCount==15)
+        {
+            console.log(playCount);
+            console.log(convertCountRush)
+            console.log(convertCountPass)
+            console.log(passCount)
+            console.log(rushCount)
+        }
+
       })
       //Iterate through each down and keep track of play selection. 
   }
-
+}
+function checkIfFirstDownPass(plays){
 
 }
 //Function that queries Seahawks Penalty Plays. 
@@ -109,11 +176,11 @@ function playTypeTuple(){
 //helper functions
 function connecToMongo(){
   // Connect to the db
-  MongoClient.connect("mongodb://localhost:27017/Seahawks", function(err, db) {
+  MongoClient.connect("mongodb://chrischris292:xbox360@ds029541.mongolab.com:29541/nfl", function(err, db) {
     if(err) throw err;
     for(key in pbpData){
-          var collection = db.collection(key);
-          collection.insert(pbpData[key], function(err, docs) {
+          var collection = db.collection("Seahawks");
+          collection.insert(pbpData[key], function(err, plays) {
           });
     }
   });
@@ -153,7 +220,7 @@ var csvStream = csv.fromStream(stream,{headers:true})
 
 function getKeys(){
   var badKey;
-    MongoClient.connect("mongodb://localhost:27017/Seahawks", function(err, db) {
+    MongoClient.connect("mongodb://chrischris292:xbox360@ds029541.mongolab.com:29541/nfl", function(err, db) {
     db.collectionNames(function(err, items) {
       for(key in items){
           var tempName = items[key].name;
@@ -167,8 +234,8 @@ function getKeys(){
       }
       items.splice(badKey,1)
       keyArray = items.slice(0);
-      querySeahawksPlays(db);
-        
+      //querySeahawksPlays(db);
+      querySeahawksPlaysThirdDown(db)
     })
   })
 }
