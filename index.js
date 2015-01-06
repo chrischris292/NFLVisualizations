@@ -3,8 +3,8 @@
   I do not understand why there is no multi threaded support instead of
   pseudo multi threaded crap known as asynchrony. 
 
-  Path: getKeys() -> querySeahawksPlays() -> 
-
+  Path: getKeys() -> querySeahawksPlaysThirdDown() This path is complete. data in database.
+  
   getKeys(): Sets up keyArray. Puts in Game IDs into key array. 
   querySeahawksPlays(): Counts the amount of runs and passes called by Seahawks. 
 **/
@@ -32,13 +32,17 @@ getKeys();
 
 //Function that gets success rate of third down pass/run plays
 function querySeahawksPlaysThirdDown(db){
-  console.log("hi")
   var rushCount = 0;
   var passCount = 0;
   var convertCountRush = 0;
   var convertCountPass = 0;
+  var convertCountRush2 = 0;
+  var convertCountPass2 = 0;
+  var rushCount2 = 0;
+  var passCount2 = 0;
   var sackCount = 0;
   var playCount = 0;
+  var penaltyCount = 0;
 var gameCount = 0;
   //for each game.
   for(game in keyArray)
@@ -71,20 +75,32 @@ var gameCount = 0;
                   //could do recursive check here for if multiple plays after penalty...add later. 
                   //Penalty check next play for count. 
                   if(plays[key].IsNoPlay=="1"){
-                      //Check first down?
+                      penaltyCount++;
+                      //Check first down next play?
                       if(plays[key+1]!=undefined) //means the game was alreadyd over. 
                       {
                         if(plays[key+1].ToGo<=plays[key+1].Yards){
-                          convertCountRush++;
+                          if(plays[key+1].IsRush=="1")
+                          {
+                            convertCountRush2++;
+                            rushCount2++;
+                          }
+                          if(plays[key+1].IsPass=="1")
+                          {
+                            convertCountPass2++;
+                            passCount2++;
+                          }
                         }
                       }
                   }
                   else if((plays[key].IsSack=="1")||(plays[key].IsFumble=="1")){
                       //sackCount++;
+                      rushCount++;
                   }
                   else{
                       //this is where kneel downs happen....but we dont care abotu that. 
                   }
+
               }
 
 
@@ -92,15 +108,30 @@ var gameCount = 0;
 
         }
         //due to asynchronous nature of code must check for end case down here...
-        console.log(plays[0].GameId)
        // console.log(keyArray[keyArray.length-1])
-        if(gameCount==15)
+        if(gameCount==17)
         {
-            console.log(playCount);
-            console.log(convertCountRush)
-            console.log(convertCountPass)
-            console.log(passCount)
-            console.log(rushCount)
+          var seedData = [
+          {
+            "playCount": playCount,
+            "convertCountRush": convertCountRush,
+            "convertCountPass": convertCountPass,
+            "passCount": passCount,
+            "rushCount": rushCount,
+            "convertCountPass2": convertCountPass2,
+            "convertCountRush2": convertCountRush2,
+            "passCount2": passCount2,
+            "rushCount2": rushCount2,
+            "penaltyCount": penaltyCount,
+
+          }
+        ];
+          MongoClient.connect("mongodb://chrischris292:xbox360@ds029541.mongolab.com:29541/nfl", function(err, db) {
+            if(err) throw err;
+            var collection = db.collection("Conversions");
+            collection.insert(seedData, function(err, plays) {
+            });
+          });
         }
 
       })
@@ -179,7 +210,7 @@ function connecToMongo(){
   MongoClient.connect("mongodb://chrischris292:xbox360@ds029541.mongolab.com:29541/nfl", function(err, db) {
     if(err) throw err;
     for(key in pbpData){
-          var collection = db.collection("Seahawks");
+          var collection = db.collection(key);
           collection.insert(pbpData[key], function(err, plays) {
           });
     }
